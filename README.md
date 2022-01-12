@@ -14,7 +14,8 @@ The included topics are:
   - This is rather straightforward -- the server will definitely need to allocate memory for all sorts of things (strings, data structures, etc.)
 - Working with files
   - Source code files will be sent to/from the server/client, so both sides will have to work with files.
-  - Server information about registered users will be stored in a file (or multiple) to persist between sessions.
+  - Information on both users and games will be stored in files.
+  - Redirection of stdin and stdout will be necessary for communication between players and the game
 - Processes
   - The server will operate with multiple subservers & other children, for the purposes of:
     - Matching users & competing their bots against each other (1-many children per game)
@@ -22,10 +23,8 @@ The included topics are:
       - One child of these children will run the actual game to communicate with the user-submitted programs
     - Re-ranking users after each match (1 child per game)
     - Interacting with each client (many children, fluctuating with respect to # of active users) 
-    - Interacting with an "admin" client (1 child per game)
-  - Other command line utilities such as `ftp` and/or `gzip` may be used via `fork` & `exec`.
-- Shared Memory
-  - The matchmaking children will all be viewing & editing the same list of users, stored in shared memory.
+    - Interacting with an "admin" client (1 child)
+  - Other command line utilities such as `gcc`, `ftp` and/or `gzip` may be used via `fork` & `exec`.
 - Semaphores
   - Accessing the leaderboard of a game should be locked behind a semaphore to prevent interference with the re-ranking process
 - Pipes
@@ -108,6 +107,7 @@ The remaining features are auxiliary, and may not be implemented due to time con
    - Users may request to view the whole leaderboard
    - Users may request to see games recently played by their bot
    - Users may request to receive logs on specific previous games (consisting of the info sent to/from their program, and the opponent's program)
+   - Users may request to play a match against any other user, without getting scored for the result
 2. Security features (by 01/31)
    - Running user-submitted code can be a huge security risk, so, if I have time, I will try to run the user-submitted programs in a sandbox.
    - I can also double check to ensure there are no memory leaks or possible file table mishaps (accidentally leaving a pipe open before `exec`-ing, so a user-submitted program to write to it)
