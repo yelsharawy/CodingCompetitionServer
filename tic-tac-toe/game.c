@@ -7,13 +7,13 @@
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-#define FATAL(s) do {               \
-    perror(TOSTRING(__LINE__) s);   \
-    exit(-1);                       \
+#define FATAL(s) do {                   \
+    perror(TOSTRING(__LINE__) ": " s);  \
+    exit(-1);                           \
 } while(0)
-
-#define SCAN_PATH(s) scanf("%"TOSTRING(PATH_MAX)"s", s)
-
+// TOSTRING(PATH_MAX)
+#define SCAN_PATH(s) scanf("%s", s)
+// we can just trust that the game will be sent a properly sized string
 char p1stdin[PATH_MAX+1];
 char p1stdout[PATH_MAX+1];
 char p2stdin[PATH_MAX+1];
@@ -92,13 +92,15 @@ int dscanf(int fd, const char *restrict format, ...) {
 // #define WR_OPEN(filename) fopen(filename, "w")
 // #define WRITE_LIT(file, x) fputs(x, file)
 typedef int ftype;
-#define RD_OPEN(filename) ({            \
-    printf("opening %s...\n", filename);\
-    open(filename, O_RDONLY);           \
+#define RD_OPEN(filename) ({                            \
+    fprintf(stderr, "opening %s...\n", filename);       \
+    int _fd = open(filename, O_RDONLY | O_NONBLOCK);    \
+    fcntl(_fd, F_SETFL, O_RDONLY);                      \
+    _fd;                                                \
 })
-#define WR_OPEN(filename) ({            \
-    printf("opening %s...\n", filename);\
-    open(filename, O_WRONLY);           \
+#define WR_OPEN(filename) ({                            \
+    fprintf(stderr, "opening %s...\n", filename);       \
+    open(filename, O_WRONLY);                           \
 })
 #define WRITE_LIT(fd, x) write(fd, x, sizeof(x)-1)
 
@@ -130,7 +132,7 @@ void draw() {
 }
 
 void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
-    printf("%d, %d, %d, %d\n", to1, from1, to2, from2);
+    fprintf(stderr, "%d, %d, %d, %d\n", to1, from1, to2, from2);
     // tell each player whether they're X or O
     WRITE_LIT(to1, "X\n");
     WRITE_LIT(to2, "O\n");
@@ -171,20 +173,34 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
 }
 
 int main() {
+    fprintf(stderr, "started!\n");
     u_int32_t num_players;
-    if (scanf("%ud", &num_players) == EOF) FATAL("scanf");
+    if (scanf("%ud\n", &num_players) == EOF) {
+        fprintf(stderr, "double checking!\n");
+        FATAL("scanf");
+    }
+    fprintf(stderr, "was able to scanf num_players!\n");
     if (num_players != 2) exit(-1);
     
+    fprintf(stderr, "got 2 players!\n");
+    
     SCAN_PATH(p1stdin);
+    fprintf(stderr, "read p1in: %s\n", p1stdin);
     SCAN_PATH(p1stdout);
+    fprintf(stderr, "read p1out: %s\n", p1stdout);
     SCAN_PATH(p2stdin);
+    fprintf(stderr, "read p2in: %s\n", p2stdin);
     SCAN_PATH(p2stdout);
-    // printf("received:\n%s\n%s\n%s\n%s\n",
-    //     p1stdin, p1stdout, p2stdin, p2stdout);
-    int in1 = WR_OPEN(p1stdin);
+    fprintf(stderr, "read p2out: %s\n", p2stdout);
+    fflush(stderr);
+    fprintf(stderr, "received:\n%s\n%s\n%s\n%s\n",
+         p1stdin, p1stdout, p2stdin, p2stdout);
+    
+    // open read ends first, in case player may be blocking to open
     int out1 = RD_OPEN(p1stdout);
-    int in2 = WR_OPEN(p2stdin);
+    int in1 = WR_OPEN(p1stdin);
     int out2 = RD_OPEN(p2stdout);
+    int in2 = WR_OPEN(p2stdin);
     fprintf(stderr, "starting!\n");
     game_loop(in1, out1, in2, out2);
 }

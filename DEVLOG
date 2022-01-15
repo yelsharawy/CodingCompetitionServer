@@ -3,3 +3,6 @@ Yusuf Elsharawy -- 01/12/22 11:47
     So I started creating the game Tic-Tac-Toe
 Yusuf Elsharawy -- 01/13/22 18:00
     Finished tic-tac-toe game, with both a manual player (for debugging) and a random player (in Python).
+Yusuf Elsharawy -- 01/14/22 22:00
+    Created a program that can start the tic-tac-toe game and two players.
+    I also figured out how Linux namespaces work, so that I can use them for greater security.
