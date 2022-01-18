@@ -6,3 +6,5 @@ Yusuf Elsharawy -- 01/13/22 18:00
 Yusuf Elsharawy -- 01/14/22 22:00
     Created a program that can start the tic-tac-toe game and two players.
     I also figured out how Linux namespaces work, so that I can use them for greater security.
+Yusuf Elsharawy -- 01/17/22 15:00 - 01/18/22 15:28 PM
+    Worked on the reranker & implemented ELO rating system, a bit behind schedule thanks to college stuff

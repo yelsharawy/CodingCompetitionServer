@@ -77,7 +77,7 @@ There is only me. I will do all of the work.
     server_data/
         games/
             tic-tac-toe/
-                game_info       // game's acceptde # of players, etc.
+                game_info       // game's accepted # of players, etc.
                 prog            // executable
                 leaderboard     // list of players & their scores
     ```

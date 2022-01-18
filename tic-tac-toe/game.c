@@ -107,8 +107,8 @@ typedef int ftype;
 void Xwins() {
     printf(
         "end\n"
-        "1\n"
-        "-1\n"
+        "2\n"
+        "0\n"
     );
     exit(0);
 }
@@ -116,8 +116,8 @@ void Xwins() {
 void Owins() {
     printf(
         "end\n"
-        "-1\n"
-        "1\n"
+        "0\n"
+        "2\n"
     );
     exit(0);
 }
@@ -125,8 +125,8 @@ void Owins() {
 void draw() {
     printf(
         "end\n"
-        "0\n"
-        "0\n"
+        "1\n"
+        "1\n"
     );
     exit(0);
 }
