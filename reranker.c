@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <math.h>
-#include "constants.h"
+#include "common.h"
 
 #define D 400
 #define K 50

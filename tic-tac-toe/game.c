@@ -80,7 +80,7 @@ int dscanf(int fd, const char *restrict format, ...) {
     char *line = NULL;
     size_t size = 0;
     size_t actual = dgetline(&line, &size, fd);
-    fprintf(stderr, "read line len %ld\n", actual);
+    // fprintf(stderr, "read line len %ld\n", actual);
     
     int ret = vsscanf(line, format, varargs);
     va_end(varargs);
@@ -143,9 +143,9 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
     int turns = 0;
     while (1) {
         // player 0's turn
-        printf("turn 0\n");             // tells which player(s) are expected to respond
+        printf("turn 0\n"); fflush(stdout);             // tells which player(s) are expected to respond
         if (dscanf(from1, "%d,%d\n", &r, &c) != 2) Owins();
-        printf("frame\n");              // tells when the expected player(s) have responded
+        printf("frame\n"); fflush(stdout);              // tells when the expected player(s) have responded
         fprintf(stderr, "got coords %d,%d\n", r, c);
         if (r < 0 || r > 2 || c < 0 || c > 2) Owins();
         if (board[r][c] != '.') Owins();
@@ -157,9 +157,9 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
         turns++;
         if (turns == 9) draw();
         
-        printf("turn 1\n");
+        printf("turn 1\n"); fflush(stdout);
         if (dscanf(from2, "%d,%d\n", &r, &c) != 2) Xwins();
-        printf("frame\n");
+        printf("frame\n"); fflush(stdout);
         fprintf(stderr, "got coords %d,%d\n", r, c);
         if (r < 0 || r > 2 || c < 0 || c > 2) Xwins();
         if (board[r][c] != '.') Xwins();
