@@ -51,7 +51,7 @@ void printhelp() {
 " ./ccs -a player1\n"
 " ./ccs -s player1 random_player.tar ttt\n"
 " ./ccs -a player2\n"
-" ./ccs -s player2 random_player.tar ttt\n"
+" ./ccs -s player2 better_player.tar ttt\n"
 " ./ccs -l ttt\n"
 " ./ccs -p ttt player1 player2\n"
 " ./ccs -l ttt\n"
