@@ -93,13 +93,13 @@ int dscanf(int fd, const char *restrict format, ...) {
 // #define WRITE_LIT(file, x) fputs(x, file)
 typedef int ftype;
 #define RD_OPEN(filename) ({                            \
-    fprintf(stderr, "opening %s...\n", filename);       \
+    /*fprintf(stderr, "opening %s...\n", filename);*/   \
     int _fd = open(filename, O_RDONLY | O_NONBLOCK);    \
     fcntl(_fd, F_SETFL, O_RDONLY);                      \
     _fd;                                                \
 })
 #define WR_OPEN(filename) ({                            \
-    fprintf(stderr, "opening %s...\n", filename);       \
+    /*fprintf(stderr, "opening %s...\n", filename);*/   \
     open(filename, O_WRONLY);                           \
 })
 #define WRITE_LIT(fd, x) write(fd, x, sizeof(x)-1)
@@ -146,7 +146,7 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
         printf("turn 0\n"); fflush(stdout);             // tells which player(s) are expected to respond
         if (dscanf(from1, "%d,%d\n", &r, &c) != 2) Owins();
         printf("frame\n"); fflush(stdout);              // tells when the expected player(s) have responded
-        fprintf(stderr, "got coords %d,%d\n", r, c);
+        // fprintf(stderr, "got coords %d,%d\n", r, c);
         if (r < 0 || r > 2 || c < 0 || c > 2) Owins();
         if (board[r][c] != '.') Owins();
         board[r][c] = 'X';
@@ -160,7 +160,7 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
         printf("turn 1\n"); fflush(stdout);
         if (dscanf(from2, "%d,%d\n", &r, &c) != 2) Xwins();
         printf("frame\n"); fflush(stdout);
-        fprintf(stderr, "got coords %d,%d\n", r, c);
+        // fprintf(stderr, "got coords %d,%d\n", r, c);
         if (r < 0 || r > 2 || c < 0 || c > 2) Xwins();
         if (board[r][c] != '.') Xwins();
         board[r][c] = 'O';
@@ -173,34 +173,33 @@ void game_loop(ftype to1, ftype from1, ftype to2, ftype from2) {
 }
 
 int main() {
-    fprintf(stderr, "started!\n");
+    // fprintf(stderr, "started!\n");
     u_int32_t num_players;
     if (scanf("%ud\n", &num_players) == EOF) {
-        fprintf(stderr, "double checking!\n");
         FATAL("scanf");
     }
-    fprintf(stderr, "was able to scanf num_players!\n");
+    // fprintf(stderr, "was able to scanf num_players!\n");
     if (num_players != 2) exit(-1);
     
-    fprintf(stderr, "got 2 players!\n");
+    // fprintf(stderr, "got 2 players!\n");
     
     SCAN_PATH(p1stdin);
-    fprintf(stderr, "read p1in: %s\n", p1stdin);
+    // fprintf(stderr, "read p1in: %s\n", p1stdin);
     SCAN_PATH(p1stdout);
-    fprintf(stderr, "read p1out: %s\n", p1stdout);
+    // fprintf(stderr, "read p1out: %s\n", p1stdout);
     SCAN_PATH(p2stdin);
-    fprintf(stderr, "read p2in: %s\n", p2stdin);
+    // fprintf(stderr, "read p2in: %s\n", p2stdin);
     SCAN_PATH(p2stdout);
-    fprintf(stderr, "read p2out: %s\n", p2stdout);
-    fflush(stderr);
-    fprintf(stderr, "received:\n%s\n%s\n%s\n%s\n",
-         p1stdin, p1stdout, p2stdin, p2stdout);
+    // fprintf(stderr, "read p2out: %s\n", p2stdout);
+    // fflush(stderr);
+    // fprintf(stderr, "received:\n%s\n%s\n%s\n%s\n",
+    //      p1stdin, p1stdout, p2stdin, p2stdout);
     
     // open read ends first, in case player may be blocking to open
     int out1 = RD_OPEN(p1stdout);
     int in1 = WR_OPEN(p1stdin);
     int out2 = RD_OPEN(p2stdout);
     int in2 = WR_OPEN(p2stdin);
-    fprintf(stderr, "starting!\n");
+    // fprintf(stderr, "starting!\n");
     game_loop(in1, out1, in2, out2);
 }

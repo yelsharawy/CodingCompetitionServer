@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# NOTE:
+# run this in tmux with readwrite built as `rw` here
+
 pipes={in,out}{1,2}
 
 echo {in,out}{1,2}

@@ -15,9 +15,19 @@
 } while (0)
 #define CHECKTRUEMSG(value, msg, ...) CHECKZEROMSG(!(value), msg, ##__VA_ARGS__)
 #define CHECKNEG1MSG(value, msg, ...) CHECKZEROMSG((value) == (typeof(value))-1, msg": %m", ##__VA_ARGS__)
-#define CHECKZERO(value) CHECKZEROMSG(value, #value)
-#define CHECKTRUE(value) CHECKTRUEMSG(value, #value)
+#define CHECKZERO(value) CHECKZEROMSG(value, "expected 0: "#value)
+#define CHECKTRUE(value) CHECKTRUEMSG(value, "failed assertion: "#value)
 #define CHECKNEG1(value) CHECKNEG1MSG(value, #value)
+
+// Macro to easily open a file, print contents inside, and close it
+// I could've made this a function with `vprintf`,
+// but this way I get warnings if arguments don't match the format
+#define filename_printf(filename, ...) do {         \
+    int ___fd;                                                              \
+    CHECKNEG1(___fd = open(filename, O_WRONLY));                            \
+    CHECKTRUEMSG(dprintf(___fd, __VA_ARGS__) >= 0, "dprintf failed: %m");   \
+    CHECKNEG1(close(___fd));                                                \
+} while (0)
 
 // executes given `pathname` with `pathname` as first argument, the rest given as varargs
 // automatically includes ending `NULL` as well, so you don't have to
@@ -39,18 +49,7 @@
 typedef u_int8_t PlayerCount;
 // typedef long long Score;
 typedef long double Score;
-typedef unsigned long long UserID;
-
-typedef struct UserRankingData {
-    UserID userID;
-    Score score;
-} UserRankingData;
-
-typedef struct UserRanking {
-    UserRankingData data;
-    struct UserRanking *prev; // `prev` has higher score
-    struct UserRanking *next; // `next` has lower score
-} UserRanking;
+typedef long long unsigned int UserID;
 
 
 // A xor C, B xor D  -(xor)-> A xor B xor C xor D

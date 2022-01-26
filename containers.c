@@ -20,16 +20,6 @@
 #include "common.h"
 #include "containers.h"
 
-// Macro to easily open a file, print contents inside, and close it
-// I could've made this a function with `vprintf`,
-// but this way I get warnings if arguments don't match the format
-#define filename_printf(filename, ...) do {         \
-    int ___fd;                                      \
-    CHECKNEG1(___fd = open(filename, O_WRONLY));    \
-    dprintf(___fd, __VA_ARGS__);                    \
-    CHECKNEG1(close(___fd));                        \
-} while (0);
-
 // CLONE_NEWPID - new PID namespace (*first child* is the "root process")
 
 // works just like `fork`, but you can specify `CLONE_*` flags!
@@ -101,10 +91,18 @@ void limit_resources() {
     CHECKNEG1(setrlimit(RLIMIT_DATA, &(struct rlimit){ .rlim_cur = 250*MB, .rlim_max = 250*MB }));
     CHECKNEG1(setrlimit(RLIMIT_FSIZE, &(struct rlimit){ .rlim_cur = 10*MB, .rlim_max = 10*MB }));
     CHECKNEG1(setrlimit(RLIMIT_STACK, &(struct rlimit){ .rlim_cur = 1*MB, .rlim_max = 1*MB }));
+    // CHECKNEG1(setuid(65534));  // "nobody"
+    filename_printf("/proc/self/setgroups", "deny\n");
+    
+    // printf("uid: %d\n", getuid());
+    // CHECKNEG1(setgid(0));
+    // CHECKNEG1(setuid(0));
+    // printf("uid: %d\n", getuid());
 }
 
 static char *bind_mounts[] = {"/bin", "/usr", "/lib", "/lib32", "/libx32", "/lib64", "/etc", "/dev", NULL};
 
+// another fork-like function
 // the directory at `containerPath` should already exist at the time of calling
 // caller is responsible for `flock`-ing the `homeMount` beforehand if desired
 // caller is also responsible for calling `chroot` and `limit_resources` on the child
@@ -114,7 +112,7 @@ static char *bind_mounts[] = {"/bin", "/usr", "/lib", "/lib32", "/libx32", "/lib
 // -1 is returned on failure to fork
 pid_t create_container(char *containerPath, char *homeMount) {
     pid_t pid;
-    if (!(pid = clone_fork(CLONE_NEWNS | CLONE_NEWPID))) {
+    if (!(pid = clone_fork(CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUSER))) {
         char buf[PATH_MAX];
         // printf("containerPath: \"%s\"\n", containerPath);
         strcpy(buf, containerPath);

@@ -7,7 +7,8 @@ game.o: game.c
 	gcc -c game.c
 
 run:
-	./play_game.sh
+	./game
+# 	./play_game.sh
 
 clean:
 	-rm a b in1 in2 out1 out2 2> /dev/null
