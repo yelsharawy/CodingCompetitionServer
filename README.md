@@ -3,45 +3,43 @@
 - Yusuf Elsharawy, Period 5
 ## Overview
 Online coding competitions such as [Halite](https://halite.io) and similarly (but not exactly) [CodinGame](https://www.codingame.com) take user-submitted code and run them to compete in a game against each other repeatedly, usually with a ranking system that pits similarly-ranked players together.  
-My project idea is to recreate this system to allow anyone to host their own coding competition server for anyone else to submit code to. It should be simple for any user of the server to create their own games to support any (feasible) number of players.
+My project recreates this system in an extensible way, allowing anyone to host a coding competition server for others to submit code to. It should be simple for the host to create their own games to support any (feasible) number of players.
 ## Features
-This isn't a required section, but I put a lot of work into features that are practically unnoticeable during a quick test, so I'm going to brag about them! (While completely truthful, there's quite a lot of joking around in this section (cuz it's past midnight and I'm going loony), so feel free to skip it.)
-- Security
-  - Each player's code is run in a completely isolated container, only with access to the bare necessities and revoked access to security-breaking functions (i.e. `chroot`). Their stack & memory usage is also limited, so they (hopefully) can't crash the host!
-    - Any opened files (aside from those required) are ensured to be closed before forking off children that may grow up to be evil.
+### Security
+  - Each player's code is run in an isolated container (using Linux namespaces), only with access to the bare necessities and revoked access to security-breaking functions (i.e. `chroot`). Stack & memory usage is also limited, so there should be no way to crash the host.
+    - Child processes that execute arbitrary code are not able to access the parent process's files.
     - The only things a bad actor could do, as far as I know, is fill up the filesystem with tons of files, and idle forever to stall the server. A fork bomb may also be an issue, but I'm too scared to test it.
-      - Since the server cannot install submissions on its own, these cases can be caught by the operator anyway.
-  - In the case of an error in the process that creates a container (installing/running a game/submission), the container's root process and all of its children will be brutally killed, to prevent orphanage.
-    - And in the case of an error in the parent of the process that creates a container, the same will happen, while also ensuring to clean up!
-- Cleanliness/Robustness
-  - All containers exist temporarily in the `/tmp` directory and are promptly removed after they're no longer needed. They're also generated with random names ensured to not collide via `mkdtemp`.
-  - Here at Yelsh Industries, we acknowledge that orphaned children are a serious problem. So we made sure to eliminate that problem. No more questions, thank you.
-  - Probably valgrind clean (i.e. no memory leaks). I can't test it because `valgrind` doesn't like children or the `clone3` system call or something.
-- Flexibility
-  - (Note: "AI" stands for "artificial intelligence", not "machine learning" or "neural network". A deterministic, hard-coded AI is still an AI.)
+      - Since the server cannot install submissions on its own, these cases can be caught by the operator with minimal damage.
+  - If the container's "creator" process encounters an error, the container's root process and all of its children will be killed, to prevent orphan processes.
+    - The same will happen if the container's creator's parent encounters an error, while also ensuring to clean up.
+### Cleanliness/Robustness
+  - All containers exist temporarily in the `/tmp` directory and are removed when no longer needed. They're generated with random names ensured to not collide via `mkdtemp`.
+  - There should not be any cases of orphaned processes.
+  - Probably valgrind clean (i.e. no memory leaks). I couldn't figure out how to test it because `valgrind` doesn't like the `clone3` system call or something.
+### Flexibility
+  - (Note: in this context, "AI" stands for "artificial intelligence", not "machine learning" or "neural network". A deterministic, hard-coded AI is still an AI.)
   - Language
     - Any game and any AI for any game can be written in any language, so long as you can create a makefile for it.
   - Game Creation
-    - It's really easy to make a game! (Unless you're using C, in which case everything's hard.) A game follows a very simple protocol to communicate with its parent, getting the paths to the AIs' FIFOs' from the parent, and reporting back to the parent on the outcomes of the game, all through `stdin` and `stdout`. You can also use `stderr` to print things to the terminal (for debugging/logging). In case something goes wrong, just `exit`, and the parent will handle it!
-    - Although the game has to (to some extent) follow my made-up protocol, you can design whatever protocol you like for communication between your game and the players. Data is sent directly between the game and players with no middle-man -- we just hope you're not gossiping behind our backs.
-    - And games aren't limited to just 2 players! I made sure _everywhere_ to provide support for games with more players, even using a generalized version of the Elo rating system for ranking players. Too bad the only example game I made was Tic-Tac-Toe.
+    - It's really easy to make a game! The game is not responsible for handling containers or reranking players, allowing the game to follow a very simple protocol to communicate with its parent. Through `stdin` and `stdout`, it only has to:
+      - Get the paths to the AIs' input/output pipes from the parent.
+      - Report back to the parent on the outcome of the game, all through `stdin` and `stdout`.
+      
+      You can also use `stderr` to print things to the terminal (for debugging/logging). In case something goes wrong, just `exit`, and the parent will handle it!
+    - Although the game has to (to some extent) follow my made-up protocol, you can design whatever protocol you like for communication between your game and the players. Data is sent directly between the game and players with no process in between.
+    - Games aren't limited to just 2 players! I made su0re _everywhere_ to provide support for games with more players, even using a generalized version of the Elo rating system for ranking players.
   - AI Creation
-    - Similarly, it's really easy to make an AI! (I even considered doing it in C!) Again, `stdin` and `stdout` are redirected (and `stderr` isn't), so as long as your language has input and output, you can write an AI.
-- Intuitive API
-  - This is a program, not an API. But I'm really proud of the "API" that I made behind the scenes. I mean, did you _see_ `clone_fork` and `create_container` in `containers.c`?? Pure genius! Don't even get me started on how much time my error-checking macros saved me. And you can't forget `execlp_block`! Makes you wonder why this stuff isn't included in the standard library.
-- Miscellaneous Stuff
-  - I admit, my workspace is a bit of a mess. So instead of cleaning up the mess, I stuffed it all in the `misc` folder! The `create_container.sh` script, `readwrite`, and more are just waiting to be ogled at. But it's not part of my project, so I'm not responsible for documentation. It's not a messy repo, it's a feature!
-- Probably More Features
-  - I couldn't tell you if there are any more features -- I spent 2-3 days straight working on this project, not updating the `DEVLOG` (sorry). Just act impressed as if there are more features mentioned here. Thanks!
+    - Similarly, it's really easy to make an AI! Again, `stdin` and `stdout` are redirected (and `stderr` isn't), so as long as your language has input and output, you can write an AI.
+### Program Design
+  - At the time of completing this project, I was very proud of the functions and macros I made behind the scenes, such as `clone_fork` and `create_container` in `containers.c`, as well as my error-checking macros and `execlp_block`.
+### Miscellaneous
+  - When creating this project, I let my workspace be a bit messy. I had cleaned up some of this mess by putting it into the `misc` folder, such as the `create_container.sh` script, and `readwrite`, which I used for testing containers and protocols respectively.
 ## Required Libraries
-Nothing, aside from the standard C library on whatever OS the school computers use (apparently Ubuntu). In hindsight I probably should've found something to do the container work for me.  
-Note: a good amount of my code relies on GNU extensions, so I'm sorry if you think another compiler is superior.   
-As for portability, I can't help if you happen to be using a different OS, architecture, or physical computer.  
-(Sarcasm.)
+Nothing, aside from POSIX C on GCC, as my project makes use of many GNU extensions. In hindsight, it might've sped up development to find something to do the container work for me.
 ## Instructions
 Clone this repo, and run `make`. You should get a program called `ccs` (which stands for Coding Competition Server, a misnomer now that it's not really a server).  
-Run `./css` for a list of commands and their usages. An example consisting of a series of commands will also show up, which you should be able to directly run exactly as is. Remember that my project is only the server (the operator is expected to provide their own games & AIs), but you can use the example `tic-tac-toe.tar` game and `random_player.tar` submission to test it.  
-As far as I know, no errors should come up during proper usage. Any errors that *do* come up should have actual error messages pointing to the specific line where it occured (segmentation faults eradicated). PEBMAC errors may not have nice messages. (sarcasm)
+Run `./css` for a list of commands and their usages. An example consisting of a series of commands will also show up, which you should be able to directly run exactly as is. Remember that my project is only the server backend (the operator is expected to provide their own games & AIs), but you can use the example `tic-tac-toe.tar` game and `random_player.tar` submission to test it.  
+As far as I know, no errors should come up during proper usage. Any errors that *do* come up should have descriptive error messages pointing to the specific line where it occured (segmentation faults eradicated).
 
 The rest of the README is my old vision of the project, with edits made for significant changes.
 ## User Interface
@@ -159,4 +157,4 @@ The remaining features are auxiliary, and may not be implemented due to time con
    - Users may request to play a match against any other user, without getting scored for the result
 2. Security features (by 01/31)
    - Running user-submitted code can be a huge security risk, so, if I have time, I will try to run the user-submitted programs in a sandbox.
-   - I can also double check to ensure there are no memory leaks or possible file table mishaps (accidentally leaving a pipe open before `exec`-ing, so a user-submitted program to write to it)
+   - I can also double check to ensure there are no memory leaks or possible file table mishaps (accidentally leaving a pipe open before `exec`-ing, so a user-submitted program could write to it)
